@@ -3,6 +3,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let hasFlippedCard = false;
     let lockBoard = false;
     let firstCard, secondCard;
+    let matchedPairs = 0;
+    const totalPairs = cards.length / 2;
     
     //Gérer le retournement des cartes
     function flipCard() {
@@ -22,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
         secondCard = this;
         checkForMatch();
     }
+
     //Vérifie si les deux cartes retournées sont identiques
     function checkForMatch() {
         let isMatch = firstCard.dataset.card === secondCard.dataset.card;
@@ -32,8 +35,15 @@ document.addEventListener('DOMContentLoaded', () => {
     function disableCards() {
         firstCard.removeEventListener('click', flipCard);
         secondCard.removeEventListener('click', flipCard);
+        matchedPairs++;
+        
+        if (matchedPairs === totalPairs) {
+            setTimeout(showVictoryPopup, 500);
+        }
+        
         resetBoard();
     }
+
     //Retourner les cartes qui ne correspondent pas
     function unflipCards() {
         lockBoard = true;
@@ -43,19 +53,45 @@ document.addEventListener('DOMContentLoaded', () => {
             resetBoard();
         }, 1500);
     }
+
     //Réinitialiser les variables pour le prochain tour
     function resetBoard() {
         [hasFlippedCard, lockBoard] = [false, false];
         [firstCard, secondCard] = [null, null];
     }
 
+    //Afficher la fenêtre popup de victoire
+    function showVictoryPopup() {
+        const popup = document.createElement('div');
+        popup.className = 'victory-popup';
+        popup.innerHTML = `
+            <div class="popup-content">
+                <h2>Félicitations !</h2>
+                <p>Vous avez gagné la partie !</p>
+                <button id="restart-button">Nouvelle Partie</button>
+            </div>
+        `;
+        document.body.appendChild(popup);
+
+        document.getElementById('restart-button').addEventListener('click', () => {
+            matchedPairs = 0;
+            cards.forEach(card => {
+                card.classList.remove('flipped');
+                card.addEventListener('click', flipCard);
+            });
+            shuffle();
+            popup.remove();
+        });
+    }
+
     //Mélanger les cartes 
-    (function shuffle() {
+    function shuffle() {
         cards.forEach(card => {
             let randomPos = Math.floor(Math.random() * cards.length);
             card.style.order = randomPos;
         });
-    })();
+    }
 
+    shuffle();
     cards.forEach(card => card.addEventListener('click', flipCard));
 });
